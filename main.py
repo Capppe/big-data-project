@@ -9,7 +9,6 @@ data = pd.read_csv('vehicles.csv')
 #############################################################
 pd.set_option('display.max_columns', 80)
 
-
 #############################################################
 # Display general car info as the first few columns
 #############################################################
@@ -49,10 +48,10 @@ data['g/km'] = data['co2TailpipeGpm'] / 1.60934
 
 fuel_consumption = data.groupby(data['year'].dt.year)['l/100'].mean()
 emissions = data.groupby(data['year'].dt.year)['g/km'].mean()
-emissions = emissions / 15
+emissions = emissions * 0.1
 
 plt.plot(fuel_consumption.index, fuel_consumption.values, label='Fuel consumption (l/100km)')
-plt.plot(emissions.index, emissions.values, label='Emissions - CO2 (g/km)')
+plt.plot(emissions.index, emissions.values, label='Emissions - CO2 (g/100m)')
 plt.xlabel('Year')
 plt.ylabel('Average')
 plt.title('Average fuel consumption and Emissions per Year')
@@ -124,6 +123,34 @@ plt.legend()
 plt.show()
 
 #############################################################
-# Display what car has best mpg and best annual fuel cost
+# Display with a pie graph how many times a manufacturer were at the top of emissions 
 #############################################################
 
+data_emi = data[['year', 'make', 'co2TailpipeGpm']]
+
+data_emi
+
+min_emissions = data_emi.groupby('year')['co2TailpipeGpm'].idxmin()
+
+min_emissions
+
+manufacturer_least_emi = data_emi.loc[min_emissions, 'make']
+
+manufacturer_count = manufacturer_least_emi.value_counts()
+
+manufacturer_least_emi
+
+manufacturer_count
+
+def make_autopct(values):
+    def my_autopct(pct):
+        total = sum(values)
+        val = int(round(pct*total/100.0))
+        return '{v:d}'.format(v=val)
+    return my_autopct
+
+plt.figure(figsize=(8, 8))
+plt.pie(manufacturer_count, labels=manufacturer_count.index, autopct=make_autopct(manufacturer_count))
+plt.title('Manufacturer with Least Emissions Each Year')
+plt.axis('equal')
+plt.show()
